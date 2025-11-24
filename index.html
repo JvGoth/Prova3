@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Interativo de Imunologia</title>
+    <title>Quiz Interativo de Genética Médica</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,6 +17,12 @@
             text-align: center;
             color: #2c3e50;
         }
+        #timer {
+            text-align: center;
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
         .section {
             background-color: #fff;
             border-radius: 8px;
@@ -27,6 +33,8 @@
         }
         .question {
             margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
         }
         .question p {
             font-weight: bold;
@@ -61,6 +69,7 @@
             border-radius: 4px;
             margin: 5px 0;
             font-family: Arial, sans-serif;
+            box-sizing: border-box; /* Garante que o padding não estoure a largura */
         }
         .submit-btn {
             background-color: #27ae60;
@@ -77,9 +86,14 @@
         .submit-btn:hover {
             background-color: #219653;
         }
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
         .feedback {
             margin-top: 20px;
             text-align: center;
+            font-weight: bold;
         }
         .correct {
             color: #27ae60;
@@ -98,16 +112,19 @@
             padding: 0;
         }
         .result li {
-            margin: 5px 0;
+            margin: 10px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Quiz Interativo de Imunologia</h1>
-    <p style="text-align: center;">Este site contém questões interativas sobre Imunologia, baseadas nos slides fornecidos. Selecione 5 respostas por seção e clique em "Verificar". A seção final contém 20 questões abertas.</p>
+    <h1>Quiz Interativo de Genética Médica</h1>
+    <p style="text-align: center;">Este site contém questões interativas sobre Genética Médica baseadas nas aulas fornecidas. Selecione respostas para cada seção e clique em "Verificar". A seção final contém 15 questões abertas com contexto dos slides.</p>
+    <div id="timer">Tempo restante: 01:30:00</div>
 
     <div class="section" id="section1">
-        <h2>Funções do SI e Imunidade Inata vs Adaptativa</h2>
+        <h2>Introdução à Genética</h2>
         <div id="questions1"></div>
         <button class="submit-btn" onclick="checkAnswers('section1')">Verificar Respostas</button>
         <div class="feedback" id="feedback1"></div>
@@ -115,7 +132,7 @@
     </div>
 
     <div class="section" id="section2">
-        <h2>Células e Órgãos do Sistema Imune</h2>
+        <h2>Histórico da Genética</h2>
         <div id="questions2"></div>
         <button class="submit-btn" onclick="checkAnswers('section2')">Verificar Respostas</button>
         <div class="feedback" id="feedback2"></div>
@@ -123,7 +140,7 @@
     </div>
 
     <div class="section" id="section3">
-        <h2>Definição, Tipos e Epítopos de Antígenos</h2>
+        <h2>Genética Mendeliana</h2>
         <div id="questions3"></div>
         <button class="submit-btn" onclick="checkAnswers('section3')">Verificar Respostas</button>
         <div class="feedback" id="feedback3"></div>
@@ -131,7 +148,7 @@
     </div>
 
     <div class="section" id="section4">
-        <h2>Antigenicidade, Imunogenicidade e Fatores</h2>
+        <h2>Extensões da Análise Mendeliana</h2>
         <div id="questions4"></div>
         <button class="submit-btn" onclick="checkAnswers('section4')">Verificar Respostas</button>
         <div class="feedback" id="feedback4"></div>
@@ -139,7 +156,7 @@
     </div>
 
     <div class="section" id="section5">
-        <h2>Anticorpos, Haptenos, Superantígenos e Mecanismos</h2>
+        <h2>Análise de Heredogramas</h2>
         <div id="questions5"></div>
         <button class="submit-btn" onclick="checkAnswers('section5')">Verificar Respostas</button>
         <div class="feedback" id="feedback5"></div>
@@ -148,7 +165,7 @@
 
     <div class="section" id="section6">
         <h2>Questões Abertas (Nível Avançado)</h2>
-        <p>Responda livremente nas caixas de texto. Verificação parcial baseada em palavras-chave.</p>
+        <p>Responda livremente nas caixas de texto com base no contexto fornecido. Verificação parcial baseada em palavras-chave.</p>
         <div id="questions6"></div>
         <button class="submit-btn" onclick="checkAnswers('section6')">Verificar Respostas</button>
         <div class="feedback" id="feedback6"></div>
@@ -165,120 +182,136 @@
             return array;
         }
 
-        // Pools de Perguntas de Imunologia (Baseadas nos PDFs)
+        // Pools de Perguntas de Genética Médica (baseado nos PDFs)
+        // NOTA: Removidos os prefixos "A:", "B:" para permitir embaralhamento real das letras
         const questionPools = {
-            section1: [
-                { type: 'mc', q: "Qual das seguintes NÃO é uma função principal do Sistema Imune listada nos slides?", options: ["A: Resistência às infecções [cite: 251]", "B: Tolerância ao próprio [cite: 252]", "C: Controle de Tumores [cite: 266]", "D: Digestão de nutrientes"], correct: "D" },
-                { type: 'mc', q: "A imunidade inata é caracterizada por ser:", options: ["A: Específica e com memória [cite: 300, 332]", "B: Constitutiva, imediata e rápida [cite: 326]", "C: Lenta e dependente de expansão clonal [cite: 227]", "D: Mediada apenas por anticorpos [cite: 339, 342]"], correct: "B" },
-                { type: 'mc', q: "A resposta imune adaptativa possui quais propriedades principais?", options: ["A: Especificidade e memória [cite: 332, 333, 335]", "B: Apenas inflamação e defesa antiviral [cite: 331]", "C: Ausência de diversidade (amplo espectro) [cite: 333]", "D: É sempre imediata e rápida [cite: 313]"], correct: "A" },
-                { type: 'mc', q: "A imunidade humoral é mediada principalmente por:", options: ["A: Linfócitos T em cooperação [cite: 338, 340]", "B: Linfócitos B e Anticorpos [cite: 339, 341, 342]", "C: Fagócitos inatos [cite: 304]", "D: Barreiras epiteliais [cite: 301]"], correct: "B" },
-                { type: 'mc', q: "Receber anticorpos da mãe durante a gestação e lactação é um exemplo de:", options: ["A: Imunidade ativa natural [cite: 358]", "B: Imunidade ativa artificial [cite: 359]", "C: Imunidade passiva natural [cite: 361]", "D: Imunidade passiva artificial [cite: 362]"], correct: "C" },
-                { type: 'mc', q: "A vacinação (imunização) é um exemplo de:", options: ["A: Imunidade passiva artificial [cite: 362]", "B: Imunidade ativa artificial [cite: 359]", "C: Imunidade ativa natural [cite: 358]", "D: Imunidade inata [cite: 299]"], correct: "B" },
-                { type: 'mc', q: "A resposta imune celular é mediada por:", options: ["A: Linfócitos T em cooperação com outras células [cite: 338, 340]", "B: Apenas anticorpos [cite: 339]", "C: Sistema complemento [cite: 311]", "D: Basófilos e Mastócitos [cite: 308]"], correct: "A" },
-                { type: 'mc', q: "Qual a principal diferença entre a resposta primária e secundária?", options: ["A: A secundária é mais lenta e fraca", "B: A primária usa células inatas, a secundária não", "C: A secundária é mais rápida e intensa devido à memória [cite: 335, 347]", "D: A primária não produz anticorpos"], correct: "C" },
-                { type: 'mc', q: "Fatores como idade, estresse e nutrição podem influenciar:", options: ["A: A resposta imune à vacinação [cite: 272, 273, 280, 284]", "B: Apenas a imunidade inata [cite: 272]", "C: Apenas a cor das células", "D: Somente a imunidade passiva [cite: 360]"], correct: "A" },
-                { type: 'mc', q: "As principais reações protetoras da imunidade inata são:", options: ["A: Memória e especificidade [cite: 333, 335]", "B: Inflamação e Defesa antiviral [cite: 331]", "C: Apenas expansão clonal [cite: 227]", "D: Produção de IgA e IgG [cite: 187]"], correct: "B" }
+            section1: [ // Introdução à Genética
+                { type: 'mc', q: "O que a genética estuda, segundo a aula?", options: ["Todos os aspectos dos genes, unidades fundamentais da informação biológica", "Apenas estrutura celular", "Apenas evolução animal", "Apenas doenças infecciosas"], correctText: "Todos os aspectos dos genes, unidades fundamentais da informação biológica" },
+                { type: 'mc', q: "Como a genética pode ser subdividida?", options: ["Genética de Transmissão, Molecular e de Populações", "Apenas Genética Molecular", "Apenas Genética de Populações", "Genética de Plantas e Animais"], correctText: "Genética de Transmissão, Molecular e de Populações" },
+                { type: 'mc', q: "Qual a importância da genética na sociedade moderna?", options: ["Influencia susceptibilidade a doenças, características físicas, personalidade, etc.", "Apenas na agricultura", "Apenas em animais", "Nenhum impacto"], correctText: "Influencia susceptibilidade a doenças, características físicas, personalidade, etc." },
+                { type: 'mc', q: "Os princípios genéticos foram usados há milhares de anos para:", options: ["Domesticação de plantas e animais", "Construção de pirâmides", "Navegação marítima", "Pintura rupestre"], correctText: "Domesticação de plantas e animais" },
+                { type: 'mc', q: "Qual estrutura armazena a informação biológica?", options: ["DNA organizado em genes e cromossomos", "RNA apenas", "Proteínas isoladas", "Lipídios"], correctText: "DNA organizado em genes e cromossomos" },
+                { type: 'mc', q: "Os nucleotídeos do DNA são constituídos de quantas partes?", options: ["3 partes", "2 partes", "4 partes", "1 parte"], correctText: "3 partes" },
+                { type: 'mc', q: "Genes são segmentos de cromossomo que contêm informação para:", options: ["Polipeptídeos funcionais ou moléculas de RNA", "Apenas carboidratos", "Apenas lipídios", "Nada"], correctText: "Polipeptídeos funcionais ou moléculas de RNA" },
+                { type: 'mc', q: "O DNA é compactado com:", options: ["Proteínas", "Água", "Minerais", "Vitaminas"], correctText: "Proteínas" },
+                { type: 'mc', q: "Qual é o pareamento de bases no DNA?", options: ["A=T e C≡G", "A=C e T=G", "A=G e T=C", "Nenhum pareamento"], correctText: "A=T e C≡G" },
+                { type: 'mc', q: "Qual é o código de inscrição no Moodle para a disciplina?", options: ["IBTEC39306", "GENMED2025", "UFU123", "BIOTEC456"], correctText: "IBTEC39306" }
             ],
-            section2: [
-                { type: 'mc', q: "Qual célula é considerada a principal APC (Célula Apresentadora de Antígenos)?", options: ["A: Célula dendrítica [cite: 407]", "B: Neutrófilo [cite: 408]", "C: Eritrócito", "D: Plaquetas"], correct: "A" },
-                { type: 'mc', q: "Linfócitos T CD4+ são também conhecidos como:", options: ["A: Helpers/Auxiliares [cite: 351, 398]", "B: Citotóxicos/Citolíticos [cite: 351, 398]", "C: Reguladores [cite: 351, 398]", "D: Natural Killers (NK) [cite: 403]"], correct: "A" },
-                { type: 'mc', q: "Quais são os órgãos linfoides primários (centrais) onde os linfócitos maduram?", options: ["A: Linfonodos e Baço [cite: 413]", "B: Medula óssea e Timo [cite: 413]", "C: Fígado e Rins", "D: MALT e GALT [cite: 413, 446]"], correct: "B" },
-                { type: 'mc', q: "O Baço é um órgão secundário que filtra antígenos primariamente da:", options: ["A: Circulação sanguínea [cite: 436]", "B: Circulação linfática [cite: 431]", "C: Mucosa intestinal [cite: 446]", "D: Pele [cite: 446]"], correct: "A" },
-                { type: 'mc', q: "Linfócitos NK (Natural Killer) são mediadores da imunidade:", options: ["A: Inata, contra vírus e tumores [cite: 403]", "B: Adaptativa humoral [cite: 339]", "C: Adaptativa celular [cite: 338]", "D: Passiva artificial [cite: 362]"], correct: "A" },
-                { type: 'mc', q: "O Timo é o sítio de maturação principal de qual célula?", options: ["A: Linfócitos B [cite: 419]", "B: Linfócitos T [cite: 413, 396]", "C: Macrófagos [cite: 378]", "D: Neutrófilos [cite: 408]"], correct: "B" },
-                { type: 'mc', q: "A Medula Óssea é o sítio de maturação principal de qual célula?", options: ["A: Linfócitos B [cite: 419, 396]", "B: Linfócitos T [cite: 413]", "C: Apenas Células T CD4+", "D: Células dendríticas maduras [cite: 389]"], correct: "A" },
-                { type: 'mc', q: "Qual granulócito está primariamente envolvido na fagocitose de bactérias?", options: ["A: Eosinófilos [cite: 408]", "B: Basófilos [cite: 408]", "C: Neutrófilos [cite: 408]", "D: Mastócitos [cite: 408]"], correct: "C" },
-                { type: 'mc', q: "Qual granulócito está envolvido na defesa contra parasitas e em alergias?", options: ["A: Eosinófilos [cite: 408]", "B: Neutrófilos [cite: 408]", "C: Monócitos [cite: 373]", "D: Linfócitos T"], correct: "A" },
-                { type: 'mc', q: "Linfonodos, Baço e MALT (Tecido Linfoide Associado à Mucosa) são classificados como:", options: ["A: Órgãos primários [cite: 413]", "B: Órgãos secundários (periféricos) [cite: 413]", "C: Barreiras epiteliais [cite: 301]", "D: Sítios de hematopoiese [cite: 416]"], correct: "B" }
+            section2: [ // Histórico da Genética
+                { type: 'mc', q: "Quem introduziu o conceito de pangênese?", options: ["Hipócrates de Cos", "Aristóteles", "Gregor Mendel", "James Watson"], correctText: "Hipócrates de Cos" },
+                { type: 'mc', q: "O conceito de pangênese levou à noção de:", options: ["Herança de caracteres adquiridos", "Teoria do germoplasma", "Estrutura do DNA", "Codominância"], correctText: "Herança de caracteres adquiridos" },
+                { type: 'mc', q: "Aristóteles rejeitou o conceito de pangênese porque:", options: ["Partes amputadas não eram herdadas e semelhança com ancestrais ausentes nos pais", "Acreditava em herança apenas materna", "Não acreditava em herança", "Apenas estudava plantas"], correctText: "Partes amputadas não eram herdadas e semelhança com ancestrais ausentes nos pais" },
+                { type: 'mc', q: "Segundo Aristóteles, a fêmea fornece a:", options: ["Matéria básica", "Essência", "Apenas alma", "Nada"], correctText: "Matéria básica" },
+                { type: 'mc', q: "Quem publicou 'Experimentos sobre a hibridização de plantas' em 1866?", options: ["Gregor Mendel", "Charles Darwin", "James Watson", "Rosalind Franklin"], correctText: "Gregor Mendel" },
+                { type: 'mc', q: "Mendel conduziu experimentos de cruzamento de:", options: ["1856 até 1863", "1900 até 1910", "1700 até 1750", "2000 até 2010"], correctText: "1856 até 1863" },
+                { type: 'mc', q: "Quem descobriu a estrutura do DNA em 1953?", options: ["James Watson e Francis Crick", "Gregor Mendel", "Aristóteles", "Hipócrates"], correctText: "James Watson e Francis Crick" },
+                { type: 'mc', q: "O Talmund compreendia sobre a:", options: ["Hemofilia", "Diabetes", "Câncer", "Gripe"], correctText: "Hemofilia" },
+                { type: 'mc', q: "A polinização de plantas foi registrada em escultura de:", options: ["883 a 859 a.C.", "2000 a.C.", "1953", "1866"], correctText: "883 a 859 a.C." },
+                { type: 'mc', q: "Qual teoria veio no final do século XIX?", options: ["Teoria do germoplasma (Weismann)", "Pangênese", "Estrutura do DNA", "Codominância"], correctText: "Teoria do germoplasma (Weismann)" }
             ],
-            section3: [
-                { type: 'mc', q: "De acordo com a definição nos slides, um Antígeno (Ag) é qualquer substância que pode ligar especificamente a um:", options: ["A: Anticorpo (BCR) ou Receptor de Célula T (TCR) [cite: 95, 97, 98]", "B: Apenas receptores da imunidade inata [cite: 99]", "C: Apenas ao Sistema Complemento [cite: 311]", "D: Apenas a moléculas de MHC"], correct: "A" },
-                { type: 'mc', q: "Antígenos próprios do organismo, que normalmente são tolerados, são chamados de:", options: ["A: Antígenos estranhos [cite: 88]", "B: Haptenos [cite: 162]", "C: Autoantígenos [cite: 93]", "D: Superantígenos [cite: 166]"], correct: "C" },
-                { type: 'mc', q: "A região específica no antígeno que é reconhecida pelo anticorpo ou TCR é chamada de:", options: ["A: Epítopo (ou Determinante Antigênico) [cite: 135, 137]", "B: Paratopo", "C: Imunógeno [cite: 140]", "D: Adjuvante [cite: 159]"], correct: "A" },
-                { type: 'mc', q: "Um epítopo que é perdido quando a proteína sofre desnaturação (perde a estrutura 3D) é um:", options: ["A: Determinante linear [cite: 138, 27]", "B: Determinante conformacional [cite: 138, 21, 46]", "C: Neoantígeno [cite: 138, 30]", "D: Hapteno [cite: 162]"], correct: "B" },
-                { type: 'mc', q: "Qual classe de molécula é listada como a mais imunogênica (Proteínas > ...)?", options: ["A: Ácidos nucleicos [cite: 1]", "B: Lipídeos [cite: 1]", "C: Polissacarídeos [cite: 1]", "D: Proteínas [cite: 1]"], correct: "D" },
-                { type: 'mc', q: "Patógenos, microbiota, alimentos e antígenos ambientais são classificados como:", options: ["A: Antígenos estranhos [cite: 88, 89, 90, 91, 92]", "B: Autoantígenos [cite: 93]", "C: Epítopos lineares [cite: 27]", "D: Antígenos neoantigênicos [cite: 30]"], correct: "A" },
-                { type: 'mc', q: "A falha na tolerância a autoantígenos pode levar a:", options: ["A: Doenças autoimunes [cite: 133, 134]", "B: Imunidade passiva [cite: 360]", "C: Resposta inata [cite: 299]", "D: Uma resposta secundária mais forte [cite: 347]"], correct: "A" },
-                { type: 'mc', q: "Um determinante linear é reconhecido pela sua sequência de aminoácidos, independentemente da:", options: ["A: Carga elétrica", "B: Estrutura 3D (conformação) [cite: 138, 27, 43]", "C: Ligação ao TCR [cite: 98]", "D: Presença de adjuvante [cite: 159]"], correct: "B" },
-                { type: 'mc', q: "Por que os receptores da imunidade inata não são inclusos na definição clássica de Antígeno?", options: ["A: Porque eles não ligam substâncias", "B: Porque eles não são específicos como BCR e TCR [cite: 99]", "C: Porque eles induzem memória [cite: 299]", "D: Porque eles são solúveis"], correct: "B" }
+            section3: [ // Genética Mendeliana
+                { type: 'mc', q: "Qual o início da Genética Moderna?", options: ["1900, com o trabalho de Mendel", "1953, estrutura do DNA", "1866, publicação de Mendel", "460 a.C., Hipócrates"], correctText: "1900, com o trabalho de Mendel" },
+                { type: 'mc', q: "Mendel era contemporâneo de:", options: ["Charles Darwin", "James Watson", "Aristóteles", "Weismann"], correctText: "Charles Darwin" },
+                { type: 'mc', q: "Mendel publicou sobre hibridização de plantas em:", options: ["1866", "1953", "1900", "1859"], correctText: "1866" },
+                { type: 'mc', q: "Qual o monastério de Mendel?", options: ["O monastério onde conduziu experimentos", "Um laboratório moderno", "Uma universidade", "Nenhum"], correctText: "O monastério onde conduziu experimentos" },
+                { type: 'mc', q: "Mendel não sabia o que eram genes ou:", options: ["Como eram herdados em nível celular", "Sobre DNA", "Sobre proteínas", "Sobre RNA"], correctText: "Como eram herdados em nível celular" },
+                { type: 'mc', q: "Qual o conceito rejeitado por Aristóteles na hereditariedade?", options: ["Pangênese", "Germoplasma", "DNA", "Codominância"], correctText: "Pangênese" },
+                { type: 'mc', q: "Hipócrates acreditava em:", options: ["Pangênese", "Competição entre sêmen", "Essência masculina", "Matéria feminina"], correctText: "Pangênese" },
+                { type: 'mc', q: "A teoria do germoplasma foi proposta por:", options: ["Weismann", "Mendel", "Darwin", "Watson"], correctText: "Weismann" },
+                { type: 'mc', q: "Escritos sagrados Indus atribuíam características a:", options: ["Pais e diferenças entre irmãos à mãe", "Apenas pai", "Apenas mãe", "Ancestrais distantes"], correctText: "Pais e diferenças entre irmãos à mãe" },
+                { type: 'mc', q: "O Talmund menciona:", options: ["Hemofilia e circuncisão", "Polinização", "DNA", "Câncer"], correctText: "Hemofilia e circuncisão" }
             ],
-            section4: [
-                { type: 'mc', q: "Qual é a definição de Antigenicidade?", options: ["A: Habilidade de induzir resposta imune [cite: 140]", "B: Habilidade de se combinar com Anticorpos ou TCR [cite: 140]", "C: Habilidade de ativar T policlonalmente [cite: 167]", "D: Habilidade de precisar de um carreador [cite: 163]"], correct: "B" },
-                { type: 'mc', q: "Qual é a definição de Imunogenicidade?", options: ["A: Apenas a habilidade de se ligar a um anticorpo [cite: 140]", "B: Habilidade de ligar E induzir uma resposta imune [cite: 140]", "C: Ser um antígeno de baixo peso molecular [cite: 162]", "D: Ser um autoantígeno [cite: 93]"], correct: "B" },
-                { type: 'mc', q: "Complete a frase: 'Todos os imunógenos são antígenos, mas nem todos os antígenos são...'", options: ["A: Imunógenos [cite: 141]", "B: Epítopos [cite: 137]", "C: Proteínas [cite: 1]", "D: Autoantígenos [cite: 93]"], correct: "A" },
-                { type: 'mc', q: "Qual faixa de massa molecular (MM) é considerada ideal para bons imunógenos?", options: ["A: < 5.000 Da [cite: 148]", "B: ~ 100.000 Da [cite: 148]", "C: > 1.000.000 Da", "D: A MM não influencia a imunogenicidade [cite: 147]"], correct: "B" },
-                { type: 'mc', q: "Qual fator NÃO é listado como influenciador da imunogenicidade?", options: ["A: Genótipo do indivíduo [cite: 143]", "B: Dose e via de administração [cite: 144]", "C: Uso de Adjuvantes [cite: 145]", "D: Cor do antígeno"], correct: "D" },
-                { type: 'mc', q: "A administração de um antígeno pela via endovenosa (EV) tende a levá-lo para qual órgão, favorecendo a resposta celular?", options: ["A: Linfonodos [cite: 155]", "B: Baço [cite: 156]", "C: Placas de Peyer (via oral) [cite: 155, 157]", "D: Timo [cite: 413]"], correct: "B" },
-                { type: 'mc', q: "Adjuvantes são substâncias que aumentam a imunogenicidade. Qual NÃO é um efeito geral dos adjuvantes?", options: ["A: Prolongam a persistência do Ag [cite: 160]", "B: Aumentam a inflamação local [cite: 160]", "C: Aumentam moléculas coestimuladoras [cite: 160]", "D: Induzem tolerância específica (Treg)"], correct: "D" },
-                { type: 'mc', q: "Moléculas com < 5.000 a 10.000 Da são geralmente:", options: ["A: Pobres imunógenos [cite: 148]", "B: Excelentes imunógenos [cite: 148]", "C: Superantígenos [cite: 166]", "D: Adjuvantes [cite: 159]"], correct: "A" },
-                { type: 'mc', q: "Quanto maior a distância filogenética entre a fonte do Ag e o indivíduo, a imunogenicidade tende a ser:", options: ["A: Menor [cite: 152]", "B: Maior [cite: 151, 152]", "C: Irrelevante", "D: Dependente da dose apenas [cite: 153]"], correct: "B" },
-                { type: 'mc', q: "Doses muito altas de um antígeno podem levar à:", options: ["A: Tolerância [cite: 153]", "B: Uma resposta primária mais rápida", "C: Imunidade passiva [cite: 360]", "D: Formação de haptenos [cite: 161]"], correct: "A" }
+            section4: [ // Extensões da Análise Mendeliana
+                { type: 'mc', q: "Na dominância incompleta, o heterozigoto fica:", options: ["Entre os fenótipos dos dois homozigotos", "Igual ao dominante", "Igual ao recessivo", "Novo fenótipo"], correctText: "Entre os fenótipos dos dois homozigotos" },
+                { type: 'mc', q: "Exemplo de dominância incompleta nos slides:", options: ["Frutos púrpura, violeta e branco", "Grupos sanguíneos", "Hemofilia", "Cor de pele"], correctText: "Frutos púrpura, violeta e branco" },
+                { type: 'mc', q: "Proporção genotípica na dominância incompleta:", options: ["1:2:1", "3:1", "9:3:3:1", "1:1"], correctText: "1:2:1" },
+                { type: 'mc', q: "Na codominância, o fenótipo do heterozigoto inclui:", options: ["Fenótipos dos dois homozigotos", "Apenas um fenótipo", "Nenhum fenótipo", "Fenótipo intermediário"], correctText: "Fenótipos dos dois homozigotos" },
+                { type: 'mc', q: "Quais extensões à análise mendeliana foram descobertas?", options: ["Dominância incompleta, codominância, múltiplos alelos, etc.", "Apenas pangênese", "Apenas germoplasma", "Nada"], correctText: "Dominância incompleta, codominância, múltiplos alelos, etc." },
+                { type: 'mc', q: "A dominância incompleta não afeta:", options: ["O modo que os genes são herdados", "A herança celular", "A estrutura do DNA", "A compactação"], correctText: "O modo que os genes são herdados" },
+                { type: 'mc', q: "Conceitos de penetrância e expressividade são:", options: ["Extensões modernas da genética", "Princípios básicos de Mendel", "Histórico antigo", "Apenas em plantas"], correctText: "Extensões modernas da genética" },
+                { type: 'mc', q: "Alelos letais são um exemplo de:", options: ["Extensão mendeliana", "Pangênese", "Germoplasma", "DNA"], correctText: "Extensão mendeliana" },
+                { type: 'mc', q: "Interação gênica inclui:", options: ["Epistasia", "Apenas dominância completa", "Apenas recessividade", "Nada"], correctText: "Epistasia" },
+                { type: 'mc', q: "O trabalho de Mendel ganhou visibilidade e foi confirmado em:", options: ["Diversos organismos", "Apenas ervilhas", "Apenas humanos", "Nenhum"], correctText: "Diversos organismos" }
             ],
-            section5: [
-                { type: 'mc', q: "Haptenos são antígenos de baixo peso molecular que:", options: ["A: São altamente imunogênicos sozinhos [cite: 162]", "B: Não são imunogênicos sozinhos, mas se tornam ao ligar-se a um carreador [cite: 162, 163]", "C: Ativam células T policlonalmente [cite: 167]", "D: São sempre proteínas [cite: 164]"], correct: "B" },
-                { type: 'mc', q: "Superantígenos (como toxinas de Staphylococcus) ativam inespecificamente:", options: ["A: Uma grande fração de clones de células T (até 25%) [cite: 167]", "B: Apenas células B (resposta humoral) [cite: 167]", "C: Apenas receptores da imunidade inata [cite: 99]", "D: Células NK e macrófagos apenas [cite: 403, 380]"], correct: "A" },
-                { type: 'mc', q: "A estrutura básica de todos os anticorpos consiste em:", options: ["A: 2 cadeias pesadas e 2 cadeias leves [cite: 177]", "B: 1 cadeia pesada e 1 cadeia leve", "C: Apenas cadeias leves (Kappa ou Lambda) [cite: 178]", "D: Apenas cadeias pesadas (Alfa, Mi, Gama, etc) [cite: 178]"], correct: "A" },
-                { type: 'mc', q: "Qual classe de anticorpo é um pentâmero na forma secretada e tem alta AVIDEZ inicial?", options: ["A: IgG [cite: 187]", "B: IgA (dímero) [cite: 187]", "C: IgE [cite: 187]", "D: IgM [cite: 187, 190]"], correct: "D" },
-                { type: 'mc', q: "A porção (fragmento) do anticorpo responsável pela ligação ao antígeno é a:", options: ["A: Região Fc (constante) [cite: 181]", "B: Região Fab (variável) [cite: 180, 182]", "C: Cadeia J", "D: Peça caudal [cite: 174]"], correct: "B" },
-                { type: 'mc', q: "A porção (fragmento) Fc é responsável por quais funções efetoras?", options: ["A: Apenas ligação ao antígeno [cite: 180]", "B: Ativação do complemento e ligação a receptores em fagócitos (Opsonização) [cite: 187, 192]", "C: Apenas neutralização [cite: 192]", "D: Ser um determinante conformacional [cite: 138]"], correct: "B" },
-                { type: 'mc', q: "Qual isotipo de anticorpo é crucial para a imunidade de mucosas?", options: ["A: IgA [cite: 187, 195]", "B: IgD [cite: 187]", "C: IgE [cite: 187]", "D: IgG [cite: 187]"], correct: "A" },
-                { type: 'mc', q: "Qual isotipo está envolvido na defesa contra parasitas helmínticos e reações de hipersensibilidade (alergia)?", options: ["A: IgA [cite: 187]", "B: IgD [cite: 187]", "C: IgE [cite: 187, 202]", "D: IgM [cite: 187]"], correct: "C" },
-                { type: 'mc', q: "O mecanismo ADCC (Citotoxicidade celular dependente de anticorpo) envolve qual célula e receptor?", options: ["A: Célula NK ligando-se à porção Fc da IgG via receptor CD16 (FcγRIII) [cite: 187, 196, 197, 198]", "B: Macrófago ativando complemento [cite: 192]", "C: Linfócito T CD8+ e TCR [cite: 398]", "D: Basófilo e IgE [cite: 408, 187]"], correct: "A" },
-                { type: 'mc', q: "A força de ligação de um *único* sítio Fab a um epítopo é chamada de:", options: ["A: Avidez [cite: 188, 211]", "B: Afinidade [cite: 188, 211]", "C: Imunogenicidade [cite: 140]", "D: Antigenicidade [cite: 140]"], correct: "B" }
+            section5: [ // Análise de Heredogramas
+                { type: 'mc', q: "Um heredograma é uma representação gráfica de:", options: ["História familiar mostrando herança de características", "Estrutura do DNA", "Compactação proteica", "Polinização"], correctText: "História familiar mostrando herança de características" },
+                { type: 'mc', q: "Humano é o melhor e pior organismo para estudos genéticos porque:", options: ["Não são possíveis reproduções controladas e prole pequena", "Tempo de geração curto", "Reproduções fáceis", "Prole grande"], correctText: "Não são possíveis reproduções controladas e prole pequena" },
+                { type: 'mc', q: "O probando (P) é:", options: ["A pessoa a partir da qual o heredograma é iniciado", "Um alelo recessivo", "Um gene dominante", "Um cromossomo"], correctText: "A pessoa a partir da qual o heredograma é iniciado" },
+                { type: 'mc', q: "Características autossômicas recessivas incluem exemplos como:", options: ["PKU e fibrose cística", "Síndrome de Waardenburg", "Acondroplasia", "Hemofilia"], correctText: "PKU e fibrose cística" },
+                { type: 'mc', q: "Características autossômicas dominantes incluem:", options: ["Acondroplasia (interfere no crescimento dos ossos)", "PKU", "Fibrose cística", "Hemofilia"], correctText: "Acondroplasia (interfere no crescimento dos ossos)" },
+                { type: 'mc', q: "Na análise de risco, se ambos pais são heterozigotos para recessivo raro, probabilidade de filho afetado é:", options: ["1/4", "1/2", "3/4", "1"], correctText: "1/4" },
+                { type: 'mc', q: "Símbolo para pessoa não afetada em heredograma:", options: ["Quadrado ou círculo vazio", "Quadrado ou círculo preenchido", "Diamante", "Número"], correctText: "Quadrado ou círculo vazio" },
+                { type: 'mc', q: "Síndrome de Waardenburg é herdada como:", options: ["Traço autossômico dominante", "Recessivo", "Ligado ao X", "Mitocondrial"], correctText: "Traço autossômico dominante" },
+                { type: 'mc', q: "Caracterizada por surdez, pele clara, problemas visuais e topete branco:", options: ["Síndrome de Waardenburg", "PKU", "Fibrose cística", "Hemofilia"], correctText: "Síndrome de Waardenburg" },
+                { type: 'mc', q: "Em heredogramas, múltiplas pessoas (5) são representadas por:", options: ["Número 5", "Quadrado preenchido", "Linha diagonal", "Nada"], correctText: "Número 5" }
             ],
-            section6: [ // 20 Questões Abertas
-                { type: 'open', q: "Explique as 4 funções principais do Sistema Imune listadas no slide 3.", keywords: ["resistência infecções", "tolerância", "rejeição transplantes", "controle tumores"] },
-                { type: 'open', q: "Descreva as diferenças fundamentais entre imunidade inata e adaptativa (tempo, especificidade, memória).", keywords: ["inata constitutiva imediata", "adaptativa específica memória", "lenta", "expansão clonal"] },
-                { type: 'open', q: "Diferencie imunidade ativa (natural e artificial) de imunidade passiva (natural e artificial).", keywords: ["ativa infecção imunização", "passiva gestação soros", "memória", "sem memória"] },
-                { type: 'open', q: "Diferencie imunidade humoral de imunidade celular, citando as principais células envolvidas.", keywords: ["humoral B anticorpos", "celular T cooperação", "extracelular", "intracelular"] },
-                { type: 'open', q: "Cite os dois órgãos linfoides primários e explique a função de cada um na maturação dos linfócitos.", keywords: ["medula óssea B", "timo T", "maturação", "geradores"] },
-                { type: 'open', q: "Cite dois órgãos linfoides secundários e explique como eles filtram antígenos.", keywords: ["linfonodos linfa", "baço sangue", "secundários", "periféricos", "polpa branca"] },
-                { type: 'open', q: "Qual o papel das Células Dendríticas (APCs) na ligação da imunidade inata com a adaptativa?", keywords: ["dendríticas", "apc", "apresentação", "linfócitos T", "MHC", "coestimuladores"] },
-                { type: 'open', q: "Descreva as funções dos três principais granulócitos: neutrófilos, eosinófilos e basófilos.", keywords: ["neutrófilos fagocitose bactérias", "eosinófilos parasitas alergia", "basófilos alergia histamina"] },
-                { type: 'open', q: "Defina Antígeno (Ag) e Epítopo (Determinante Antigênico).", keywords: ["antígeno BCR TCR", "epítopo região específica", "determinante", "ligação"] },
-                { type: 'open', q: "Diferencie epítopos lineares de epítopos conformacionais.", keywords: ["linear sequência", "conformacional 3D desnaturação", "nativa", "determinante"] },
-                { type: 'open', q: "Explique a diferença crucial entre antigenicidade e imunogenicidade.", keywords: ["antigenicidade ligação", "imunogenicidade induz resposta", "todos imunógenos", "nem todo antígeno"] },
-                { type: 'open', q: "Cite 3 fatores que influenciam a imunogenicidade de uma molécula.", keywords: ["massa molecular", "complexidade", "distância filogenética", "dose", "via", "adjuvantes"] },
-                { type: 'open', q: "Explique o que são Haptenos e como eles podem se tornar imunogênicos.", keywords: ["haptenos baixo peso", "não imunogênico", "carreador proteína", "conjugado", "níquel"] },
-                { type: 'open', q: "O que são Superantígenos e por que eles causam uma ativação imune tão massiva?", keywords: ["superantígenos policlonal", "25% T", "fora sulco MHC", "toxina estafilocócica"] },
-                { type: 'open', q: "Descreva a estrutura básica de um anticorpo, identificando as regiões Fab e Fc.", keywords: ["2 leves 2 pesadas", "fab variável", "antígeno", "fc constante", "efetoras"] },
-                { type: 'open', q: "Cite as 5 classes (isotipos) de anticorpos e a função principal da IgA e da IgG.", keywords: ["IgA mucosa", "IgG opsonização neonatal complemento", "IgM", "IgE", "IgD"] },
-                { type: 'open', q: "Explique a diferença entre Afinidade e Avidez, usando o IgM como exemplo de alta avidez.", keywords: ["afinidade um sítio", "avidez múltiplos sítios", "força total", "IgM pentâmero"] },
-                { type: 'open', q: "Descreva 3 mecanismos de ação dos anticorpos (ex: neutralização, opsonização, ADCC, complemento).", keywords: ["neutralização", "opsonização fagocitose", "ADCC NK", "complemento lise"] },
-                { type: 'open', q: "Explique o mecanismo de ADCC (Citotoxicidade celular dependente de anticorpo).", keywords: ["ADCC", "NK", "CD16", "FcγRIII", "IgG", "lise", "grânulos"] },
-                { type: 'open', q: "Anticorpos podem causar doenças? Cite um exemplo (ex: alergia, autoimunidade).", keywords: ["alergia IgE", "autoimunes IgG", "rejeição", "MIS-C"] }
+            section6: [ // 15 Questões Abertas
+                { type: 'open', q: "Baseado na introdução, defina o que a genética estuda e como ela pode ser subdividida.", keywords: ["aspectos genes", "unidades informação biológica", "transmissão molecular populações"] },
+                { type: 'open', q: "No histórico, explique o conceito de pangênese proposto por Hipócrates e sua influência.", keywords: ["partículas precursoras", "herança adquiridos", "influente até 1800"] },
+                { type: 'open', q: "Com base nos slides de Aristóteles, descreva por que ele rejeitou a pangênese e sua visão sobre contribuições dos pais.", keywords: ["duas cabeças", "partes amputadas não herdadas", "fêmea matéria macho essência"] },
+                { type: 'open', q: "No contexto do histórico, discuta o trabalho de Mendel e seu impacto na genética moderna.", keywords: ["experimentos hibridização", "1866 princípios hereditariedade", "início 1900"] },
+                { type: 'open', q: "Baseado na estrutura do DNA, explique os elementos estruturais e o pareamento de bases.", keywords: ["nucleotídeos 3 partes", "a=t c=g", "fitas anti-paralelas"] },
+                { type: 'open', q: "No slide sobre DNA a proteína, descreva o processo de transcrição e tradução.", keywords: ["dna rna proteína", "transcrição tradução", "genes polipeptídeos rna"] },
+                { type: 'open', q: "Com base na genética na mídia, cite e explique um exemplo de doença genética mencionado (ex: trissomia 13).", keywords: ["síndrome patau", "trissomia cromossomo 13", "genética rara grave"] },
+                { type: 'open', q: "No plano de ensino, liste as datas das provas e atividades principais.", keywords: ["prova1 25/11/2025", "prova2 03/03/2026", "apresentações casos clínicos"] },
+                { type: 'open', q: "Baseado nas extensões mendelianas, explique dominância incompleta com o exemplo dos frutos.", keywords: ["heterozigoto intermediário", "púrpura violeta branco", "1:2:1"] },
+                { type: 'open', q: "No contexto de codominância, descreva o fenótipo do heterozigoto e dê um exemplo.", keywords: ["ambos fenótipos homozigotos", "grupos sanguíneos ab", "não intermediário"] },
+                { type: 'open', q: "Com base na análise de heredogramas, explique o que é um heredograma e suas limitações em humanos.", keywords: ["representação gráfica história familiar", "reproduções não controladas", "prole pequena"] },
+                { type: 'open', q: "No slide de símbolos de heredogramas, descreva os símbolos para afetado, não afetado e sexo desconhecido.", keywords: ["preenchido afetado", "vazio não afetado", "diamante desconhecido"] },
+                { type: 'open', q: "Baseado em características autossômicas recessivas, cite exemplos e padrões em heredogramas.", keywords: ["pku fibrose cística", "pula gerações", "consanguinidade"] },
+                { type: 'open', q: "No exemplo de análise de risco, calcule a probabilidade para um casal com tios afetados por recessivo raro.", keywords: ["ambos heterozigotos", "1/4 filho afetado", "alelo raro"] },
+                { type: 'open', q: "Com base nos exercícios propostos, explique o modo de herança para braquidactilia no heredograma de Maria.", keywords: ["autossômico dominante", "dedos curtos", "probabilidade 1/2"] }
             ]
         };
 
-        // Função para gerar perguntas aleatórias (suporte a MC e open)
+        // Função para gerar perguntas aleatórias
         function generateQuestions(sectionId, pool) {
-            // Pega 5 aleatórias para seções 1-5, ou todas (pool.length) para a seção 6
             const numToGenerate = sectionId === 'section6' ? pool.length : 5;
-            const shuffled = shuffle([...pool]).slice(0, numToGenerate);
+            const shuffledQuestions = shuffle([...pool]).slice(0, numToGenerate);
             const container = document.getElementById(`questions${sectionId.slice(-1)}`);
-
-            shuffled.forEach((item, index) => {
+            
+            const alphabet = ['A', 'B', 'C', 'D'];
+            
+            shuffledQuestions.forEach((item, index) => {
                 const qDiv = document.createElement('div');
                 qDiv.classList.add('question');
                 qDiv.dataset.type = item.type;
-
+                
                 const p = document.createElement('p');
                 p.textContent = `${index + 1}. ${item.q}`;
                 qDiv.appendChild(p);
-
+                
                 if (item.type === 'mc') {
-                    qDiv.dataset.correct = item.correct;
+                    // 1. Embaralha as opções puras
+                    let optionsToShuffle = [...item.options];
+                    shuffle(optionsToShuffle);
+                    
+                    // 2. Encontra a nova letra correta após o embaralhamento
+                    let newCorrectLetter = '';
                     const optionsDiv = document.createElement('div');
                     optionsDiv.classList.add('options');
-                    item.options.forEach(opt => {
-                        // Extrai o valor (ex: "A") e o texto (ex: "Opção A")
-                        const value = opt.substring(0, opt.indexOf(':')); 
+                    
+                    optionsToShuffle.forEach((opt, optIndex) => {
+                        const newLetter = alphabet[optIndex]; // A, B, C ou D da nova posição
+                        
+                        // Verifica se esta opção é a correta comparando o texto
+                        const isCorrect = opt === item.correctText;
+                        if (isCorrect) {
+                            newCorrectLetter = newLetter;
+                        }
+                        
+                        // Cria o texto da opção com o prefixo da letra
+                        const newOptionText = `${newLetter}: ${opt}`;
+                        
                         const btn = document.createElement('button');
                         btn.classList.add('option');
-                        btn.dataset.value = value;
-                        btn.textContent = opt;
+                        btn.dataset.value = newLetter; // Armazena a nova letra (A, B, C ou D)
+                        btn.textContent = newOptionText;
                         optionsDiv.appendChild(btn);
                     });
+                    
+                    // 3. Define a nova letra correta no dataset da questão
+                    qDiv.dataset.correct = newCorrectLetter;
                     qDiv.appendChild(optionsDiv);
                 } else { // open
                     qDiv.dataset.keywords = item.keywords.join(',');
@@ -291,7 +324,33 @@
             });
         }
 
-        // Gerar perguntas ao carregar
+        // Timer global
+        let timeLeft = 5400; // Tempo total em segundos (90 min)
+        const timerDisplay = document.getElementById('timer');
+        let timerInterval;
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                
+                const formattedTime = 
+                    `${hours < 10 ? '0' : ''}${hours}:` +
+                    `${minutes < 10 ? '0' : ''}${minutes}:` +
+                    `${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                timerDisplay.textContent = `Tempo restante: ${formattedTime}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = 'Tempo esgotado!';
+                    document.querySelectorAll('.submit-btn').forEach(btn => btn.disabled = true);
+                }
+            }, 1000);
+        }
+
         window.addEventListener('load', () => {
             generateQuestions('section1', questionPools.section1);
             generateQuestions('section2', questionPools.section2);
@@ -299,8 +358,9 @@
             generateQuestions('section4', questionPools.section4);
             generateQuestions('section5', questionPools.section5);
             generateQuestions('section6', questionPools.section6);
+            
+            startTimer();
 
-            // Adicionar event listeners para seleção (MC)
             document.addEventListener('click', function(e) {
                 if (e.target.classList.contains('option')) {
                     const options = e.target.parentElement.querySelectorAll('.option');
@@ -310,51 +370,57 @@
             });
         });
 
-        // Função para verificar respostas (lógica do modelo fornecido)
         function checkAnswers(sectionId) {
+            if (timeLeft <= 0) return;
+            
             const section = document.getElementById(sectionId);
             const questions = section.querySelectorAll('.question');
             let correctCount = 0;
             let totalQuestions = 0;
             let errors = [];
 
-            questions.forEach((q, index) => {
+            questions.forEach((q) => {
                 totalQuestions++;
                 if (q.dataset.type === 'mc') {
                     const selected = q.querySelector('.option.selected');
                     const correct = q.dataset.correct;
+                    
                     if (selected && selected.dataset.value === correct) {
                         correctCount++;
                     } else {
                         const questionText = q.querySelector('p').textContent;
                         const selectedValue = selected ? selected.textContent : 'Nenhuma selecionada';
-                        const correctOptionElement = Array.from(q.querySelectorAll('.option')).find(opt => opt.dataset.value === correct);
-                        const correctText = correctOptionElement ? correctOptionElement.textContent : 'N/A';
-                        errors.push(`${questionText} - Sua resposta: ${selectedValue} (Errada). Correta: ${correctText}`);
+                        
+                        // Encontra o botão que tem a letra correta para mostrar no feedback
+                        const correctBtn = Array.from(q.querySelectorAll('.option')).find(btn => btn.dataset.value === correct);
+                        const correctText = correctBtn ? correctBtn.textContent : 'Erro interno';
+                        
+                        errors.push(`${questionText}<br><strong>Sua resposta:</strong> ${selectedValue} (Incorreta)<br><strong>Correta:</strong> <span class='correct'>${correctText}</span>`);
                     }
                 } else { // open
                     const answer = q.querySelector('.open-answer').value.toLowerCase().trim();
                     const keywords = q.dataset.keywords.split(',').map(k => k.toLowerCase().trim());
-                    // Critério de correção parcial: pelo menos 2 keywords
                     const matches = keywords.filter(kw => answer.includes(kw)).length;
-                    if (matches >= 2) { 
+                    
+                    if (matches >= 2) {
                         correctCount++;
                     } else {
                         const questionText = q.querySelector('p').textContent;
-                        errors.push(`${questionText} - Resposta parcial/errada. Sugestão: Inclua termos como ${keywords.slice(0,3).join(', ')}...`);
+                        errors.push(`${questionText}<br>Resposta incompleta ou incorreta. Tente incluir conceitos como: <em>${keywords.slice(0,3).join(', ')}</em>`);
                     }
                 }
             });
 
             const feedback = document.getElementById(`feedback${sectionId.slice(-1)}`);
             feedback.innerHTML = `<span class="${correctCount === totalQuestions ? 'correct' : 'incorrect'}">Você acertou ${correctCount} de ${totalQuestions} questões.</span>`;
-
+            
             const result = document.getElementById(`result${sectionId.slice(-1)}`);
             result.style.display = 'block';
+            
             if (errors.length === 0) {
-                result.innerHTML = '<p class="correct">Todas corretas! Parabéns!</p>';
+                result.innerHTML = '<p class="correct"><strong>Todas corretas! Parabéns!</strong></p>';
             } else {
-                result.innerHTML = '<h3>Erros Detalhados:</h3><ul>' + errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
+                result.innerHTML = '<h3>Relatório de Erros:</h3><ul>' + errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
             }
         }
     </script>
